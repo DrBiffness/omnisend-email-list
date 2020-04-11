@@ -7,11 +7,7 @@ const rp = require('request-promise-native');
 const Moment = require('moment');
 const MomentRange = require('moment-range');
 const moment = MomentRange.extendMoment(Moment);
-
-//TODO: Need moved somewhere else
-const apiKey =
-    '5c5de6ee8653ed7d78a06d6d-eLFe60k4CLlVuzhBkC3oHC2xQdzBnTFTv5vo1p2V1I7CxFOQYN';
-//
+const { startDate, endDate } = require('../config').dateRange;
 
 module.exports = getOmnisendData;
 
@@ -62,7 +58,7 @@ async function fetchEmailContacts(apiKey) {
 }
 
 function filterAndCountContacts(contacts) {
-    const subscribedContacts = contacts.filter(({ status, createdAt }) => status === 'subscribed' && validateDateRange(createdAt));
+    const subscribedContacts = contacts.filter(({ status, createdAt }) => status === 'subscribed' && validateDateRange(createdAt, startDate, endDate));
 
     return (subscribedContacts.length);
 }
