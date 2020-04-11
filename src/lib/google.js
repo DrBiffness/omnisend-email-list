@@ -1,22 +1,34 @@
 'use strict';
-const { spreadsheetId, tableRange, scopes, tokenPath } = require('../../config');
+const aws = require('aws-sdk');
+const readline = require('readline-promise').default;
+const { google } = require('googleapis');
+const fs = require('fs-extra');
+const s3 = new aws.S3();
+const {
+    spreadsheetId,
+    tableRange,
+    scopes,
+    tokenPath
+} = require('../../config');
 
 module.exports = getApiList;
 
 async function getApiList() {
-
     try {
-        //TODO: This will turn into S3 Bucket
-        const content = require('../../credentials.json');
+        let credentials = await s3
+            .getObject({
+                Bucket: 'test',
+                Key: 'credentials.json'
+            })
+            .promise();
+        credentials = JSON.parse(credentials.toString());
         //
-        const auth = await authorize(content);
+        const auth = await authorize(credentials);
         return await listApis(auth, spreadsheetId, tableRange);
-
     } catch (err) {
         console.log('Error loading client secret file:', err);
         return [];
     }
-
 }
 
 async function getNewToken(oAuth2Client) {
@@ -31,21 +43,20 @@ async function getNewToken(oAuth2Client) {
         output: process.stdout
     });
 
-    const code = await rl.questionAsync(
-        'Enter the code from that page here: '
-    );
+    const code = await rl.questionAsync('Enter the code from that page here: ');
     const { tokens } = await oAuth2Client.getToken(code);
     oAuth2Client.setCredentials(tokens);
-    await fs.writeFile(tokenPath, JSON.stringify(tokens));
-
+    await s3
+        .putObject({
+            Body: Buffer.from(JSON.stringify(tokens)),
+            Bucket: 'test',
+            Key: 'token.json'
+        })
+        .promise();
 }
 
 async function authorize(credentials) {
-    const {
-        client_secret,
-        client_id,
-        redirect_uris
-    } = credentials.installed;
+    const { client_secret, client_id, redirect_uris } = credentials.installed;
 
     const oAuth2Client = new google.auth.OAuth2(
         client_id,
@@ -54,7 +65,13 @@ async function authorize(credentials) {
     );
 
     try {
-        const token = require(tokenPath);
+        let token = await s3
+            .getObject({
+                Bucket: 'test',
+                Key: 'token.json'
+            })
+            .promise();
+        token = JSON.parse(token.toString());
         oAuth2Client.setCredentials(token);
         return oAuth2Client;
     } catch (err) {
@@ -82,6 +99,4 @@ async function listApis(auth, spreadsheetId, range) {
         console.log('No data found.');
         return [];
     }
-
 }
-

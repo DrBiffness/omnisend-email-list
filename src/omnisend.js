@@ -1,8 +1,5 @@
 'use strict';
 
-const fs = require('fs-extra');
-const readline = require('readline-promise').default;
-const { google } = require('googleapis');
 const rp = require('request-promise-native');
 const Moment = require('moment');
 const MomentRange = require('moment-range');
@@ -12,19 +9,19 @@ const { startDate, endDate } = require('../config').dateRange;
 module.exports = getOmnisendData;
 
 async function getOmnisendData(apiList) {
-
     const data = [];
 
     for (const { siteName, apiKey } of apiList) {
-        const subscriberCount = filterAndCountContacts(await fetchEmailContacts(apiKey));
-        data.push({ siteName, subscriberCount })
+        const subscriberCount = filterAndCountContacts(
+            await fetchEmailContacts(apiKey)
+        );
+        data.push({ siteName, subscriberCount });
     }
 
     return data;
 }
 
 async function fetchEmailContacts(apiKey) {
-
     const auth = {
         headers: {
             'x-api-key': apiKey
@@ -53,25 +50,33 @@ async function fetchEmailContacts(apiKey) {
     }
 
     return contacts;
-
-
 }
 
 function filterAndCountContacts(contacts) {
-    const subscribedContacts = contacts.filter(({ status, createdAt }) => status === 'subscribed' && validateDateRange(createdAt, startDate, endDate));
+    const subscribedContacts = contacts.filter(
+        ({ status, createdAt }) =>
+            status === 'subscribed' &&
+            validateDateRange(createdAt, startDate, endDate)
+    );
 
-    return (subscribedContacts.length);
+    return subscribedContacts.length;
 }
 
 function validateDateRange(targetDate, startDate, endDate) {
     if (!targetDate) {
-        console.log('Function validateDateRange requires targetDate parameter.')
+        console.log(
+            'Function validateDateRange requires targetDate parameter.'
+        );
         return null;
     }
 
     const range = moment.range(
-        startDate ? moment(startDate).startOf('day') : moment().startOf('day').subtract(7, 'days'),
+        startDate
+            ? moment(startDate).startOf('day')
+            : moment()
+                  .startOf('day')
+                  .subtract(7, 'days'),
         endDate ? moment(endDate).endOf('day') : moment().endOf('day')
-    )
-    return (range.contains(moment(targetDate)));
+    );
+    return range.contains(moment(targetDate));
 }
