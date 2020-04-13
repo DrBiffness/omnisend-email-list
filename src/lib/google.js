@@ -1,28 +1,16 @@
 'use strict';
-const aws = require('aws-sdk');
+
 const readline = require('readline-promise').default;
 const { google } = require('googleapis');
-const fs = require('fs-extra');
-const s3 = new aws.S3();
-const {
-    spreadsheetId,
-    tableRange,
-    scopes,
-    tokenPath
-} = require('../../config');
+const { getCredentials, getTokens, putTokens } = require('./s3');
+const { spreadsheetId, tableRange, scopes } = require('../../config');
 
 module.exports = getApiList;
 
 async function getApiList() {
     try {
-        let credentials = await s3
-            .getObject({
-                Bucket: 'test',
-                Key: 'credentials.json'
-            })
-            .promise();
-        credentials = JSON.parse(credentials.toString());
         //
+        const credentials = await getCredentials();
         const auth = await authorize(credentials);
         return await listApis(auth, spreadsheetId, tableRange);
     } catch (err) {
@@ -46,13 +34,7 @@ async function getNewToken(oAuth2Client) {
     const code = await rl.questionAsync('Enter the code from that page here: ');
     const { tokens } = await oAuth2Client.getToken(code);
     oAuth2Client.setCredentials(tokens);
-    await s3
-        .putObject({
-            Body: Buffer.from(JSON.stringify(tokens)),
-            Bucket: 'test',
-            Key: 'token.json'
-        })
-        .promise();
+    await putTokens(tokens);
 }
 
 async function authorize(credentials) {
@@ -65,13 +47,7 @@ async function authorize(credentials) {
     );
 
     try {
-        let token = await s3
-            .getObject({
-                Bucket: 'test',
-                Key: 'token.json'
-            })
-            .promise();
-        token = JSON.parse(token.toString());
+        const token = await getTokens();
         oAuth2Client.setCredentials(token);
         return oAuth2Client;
     } catch (err) {
