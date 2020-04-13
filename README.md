@@ -6,7 +6,7 @@ A project that I worked on while at Income Store to retrieve weekly email subscr
 
 This code does not work properly any longer due to its reliance on **request** and **request-promise-native**
 which have been deprecated and entered into maintenance mode. The **Omnisend API** has also been updated and returns
-data in a different format than is the case in this tool. Since the tool is no longer used, no updating to the code will be performed.
+data in a different format than is the case in this tool. Since the tool is no longer used, no updates will be performed.
 
 ### Dependencies
 
