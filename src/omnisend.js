@@ -6,6 +6,8 @@ const MomentRange = require('moment-range');
 const moment = MomentRange.extendMoment(Moment);
 const { startDate, endDate } = require('../config').dateRange;
 
+// contains functions to retrieve data from omnisend api
+
 module.exports = getOmnisendData;
 
 async function getOmnisendData(apiList) {
@@ -21,6 +23,7 @@ async function getOmnisendData(apiList) {
     return data;
 }
 
+// returns all email contacts(lifetime) from omnisend api for a given site
 async function fetchEmailContacts(apiKey) {
     const auth = {
         headers: {
@@ -43,6 +46,8 @@ async function fetchEmailContacts(apiKey) {
 
     contacts.push(...results.contacts);
 
+    // returned json from api can contain multiple pages
+    // loop retrieves data from all pages
     while (results.paging && results.paging.next) {
         const url = results.paging.next;
         results = await rp(url, { ...auth, json: true });
@@ -52,6 +57,8 @@ async function fetchEmailContacts(apiKey) {
     return contacts;
 }
 
+// returns number of email contacts that were created in a
+// specified time period. define time period in config
 function filterAndCountContacts(contacts) {
     const subscribedContacts = contacts.filter(
         ({ status, createdAt }) =>
@@ -62,6 +69,7 @@ function filterAndCountContacts(contacts) {
     return subscribedContacts.length;
 }
 
+// verifies that targetDate is within specified range
 function validateDateRange(targetDate, startDate, endDate) {
     if (!targetDate) {
         console.log(
