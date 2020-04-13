@@ -7,6 +7,10 @@ const { spreadsheetId, tableRange, scopes } = require('../../config');
 
 module.exports = getApiList;
 
+// this google library contains all code for accessing the google sheet
+// which contains the list of site and api keys needed for the omnisend
+// mailing list
+
 async function getApiList() {
     try {
         //
@@ -19,6 +23,7 @@ async function getApiList() {
     }
 }
 
+// getNewToken is the fallback to update the tokens in s3 if they are no longer valid
 async function getNewToken(oAuth2Client) {
     const authUrl = oAuth2Client.generateAuthUrl({
         access_type: 'offline',
@@ -37,6 +42,9 @@ async function getNewToken(oAuth2Client) {
     await putTokens(tokens);
 }
 
+// authorize will take credentials from s3 bucket and use them to create an oAuth2 object
+// and then fetchs tokens from s3. if the tokens aren't valid the function falls back on the
+// getNewToken function to update the s3 bucket
 async function authorize(credentials) {
     const { client_secret, client_id, redirect_uris } = credentials.installed;
 
@@ -55,6 +63,7 @@ async function authorize(credentials) {
     }
 }
 
+// listApis will get data from a google sheet and return as an array of objects
 async function listApis(auth, spreadsheetId, range) {
     const sheets = google.sheets({ version: 'v4', auth });
     const result = await sheets.spreadsheets.values.get({
@@ -63,8 +72,6 @@ async function listApis(auth, spreadsheetId, range) {
     });
     let rows = result.data.values;
     if (rows.length) {
-        // // Print columns A and E, which correspond to indices 0 and 4.
-
         rows = rows.map(row => ({
             siteName: row[0],
             apiKey: row[1]
