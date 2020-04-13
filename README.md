@@ -16,3 +16,9 @@ Use of this package requires:
 -   s3 bucket containing credentials.json from google and token.json containing oAuth2 tokens
 -   AWS lambda function requires read/write permissions to s3
 -   AWS cloudwatch event that passes array of email addresses (recipients) to lambda
+
+### Usage
+
+Set entry point on AWS lambda to `src/handler.js` and configure read/write permissions to S3
+Configure dependencies and schedule task to run with Cloudwatch
+That's it! You're done
