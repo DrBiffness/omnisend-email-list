@@ -6,10 +6,15 @@ const { emailAddress } = require('../../config');
 const { clientId, clientSecret } = require('../../credentials.json');
 const { accessToken, refreshToken, expiry_date } = require('../../token.json');
 
+// contains the function to send an email using nodemailer
+
 module.exports = sendOmnisendEmail;
 
+// sendOmnisendEmail expects an object containing the contents of an email
+// message and then creates the transport using the credentials for
+// the gmail address in config.js and will send the email with all the necessary
+// oAuth2 data
 async function sendOmnisendEmail({ recipient, subject, text, attachments }) {
-
     if (!recipient || !subject || !text) {
         console.log('Recipient, subject, and text are required fields');
         return;
@@ -31,7 +36,6 @@ async function sendOmnisendEmail({ recipient, subject, text, attachments }) {
         }
     });
 
-    // send mail with defined transport object
     const info = transporter.sendMail({
         from: emailAddress,
         to: recipient,
@@ -46,7 +50,5 @@ async function sendOmnisendEmail({ recipient, subject, text, attachments }) {
         }
     });
 
-    return ('Message sent: %s', info.messageId);
-    // Message sent: <b658f8ca-6296-ccf4-8306-87d57a0b4321@example.com>
-
+    return 'Message sent: %s', info.messageId;
 }

@@ -13,7 +13,6 @@ module.exports = getApiList;
 
 async function getApiList() {
     try {
-        //
         const credentials = await getCredentials();
         const auth = await authorize(credentials);
         return await listApis(auth, spreadsheetId, tableRange);
